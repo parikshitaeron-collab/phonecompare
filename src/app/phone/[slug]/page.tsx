@@ -4,19 +4,36 @@ import { notFound } from "next/navigation";
 import SpecDuelShell from "@/components/specduel/SpecDuelShell";
 import PhoneHeroImage from "@/components/specduel/PhoneHeroImage";
 import { brandSlugFromName } from "@/lib/brand-utils";
-import { PHONES, findPhone } from "@/lib/data/phones";
-export function generateStaticParams() {
-  return PHONES.map((p) => ({ slug: p.id }));
+
+import { connectDB } from "@/lib/db";
+import Phone from "@/models/Phone";
+
+// ✅ Generate dynamic routes from DB
+export async function generateStaticParams() {
+  await connectDB();
+
+  const phones = await Phone.find();
+
+  return phones.map((p: any) => ({
+    slug: p._id.toString(),
+  }));
 }
 
-type Props = { params: Promise<{ slug: string }> };
+type Props = { params: { slug: string } };
 
 export default async function PhonePage({ params }: Props) {
-  const { slug } = await params;
-  const phone = findPhone(slug);
+  await connectDB();
+
+  const phone: any = await Phone.findById(params.slug);
+
   if (!phone) notFound();
 
-  const { scores } = phone;
+  const scores = phone.scores || {
+    performance: 7,
+    camera: 7,
+    battery: 7,
+    overall: 7,
+  };
 
   return (
     <SpecDuelShell>
@@ -35,6 +52,7 @@ export default async function PhonePage({ params }: Props) {
         >
           <span>← Home</span>
         </Link>
+
         <Link
           href={`/brand/${brandSlugFromName(phone.brand)}`}
           style={{
@@ -50,6 +68,7 @@ export default async function PhonePage({ params }: Props) {
         >
           {phone.brand}
         </Link>
+
         <h1
           style={{
             fontSize: "1.65rem",
@@ -61,10 +80,8 @@ export default async function PhonePage({ params }: Props) {
         >
           {phone.name}
         </h1>
-        <div
-          className="glass"
-          style={{ padding: 24, marginBottom: 20 }}
-        >
+
+        <div className="glass" style={{ padding: 24, marginBottom: 20 }}>
           <div
             style={{
               display: "grid",
@@ -74,33 +91,43 @@ export default async function PhonePage({ params }: Props) {
             }}
             className="phone-detail-top-grid"
           >
-            <PhoneHeroImage
-              src={phone.image}
-              alt={phone.name}
-            />
+            <PhoneHeroImage src={phone.image} alt={phone.name} />
+
             <div>
               <div
                 className="bpc-price"
                 style={{ fontSize: "1.35rem", marginBottom: 16 }}
               >
-                ₹{phone.price.toLocaleString("en-IN")}
+                ₹{phone.price?.toLocaleString("en-IN")}
               </div>
+
               <div className="insight-grid" style={{ marginBottom: 0 }}>
                 <div className="insight-block">
                   <div className="ib-name">⚡ Performance</div>
-                  <div className="ib-line">{scores.performance.toFixed(1)} / 10</div>
+                  <div className="ib-line">
+                    {scores.performance.toFixed(1)} / 10
+                  </div>
                 </div>
+
                 <div className="insight-block">
                   <div className="ib-name">📸 Camera</div>
-                  <div className="ib-line">{scores.camera.toFixed(1)} / 10</div>
+                  <div className="ib-line">
+                    {scores.camera.toFixed(1)} / 10
+                  </div>
                 </div>
+
                 <div className="insight-block">
                   <div className="ib-name">🔋 Battery</div>
-                  <div className="ib-line">{scores.battery.toFixed(1)} / 10</div>
+                  <div className="ib-line">
+                    {scores.battery.toFixed(1)} / 10
+                  </div>
                 </div>
+
                 <div className="insight-block">
                   <div className="ib-name">⭐ Overall</div>
-                  <div className="ib-line">{scores.overall.toFixed(1)} / 10</div>
+                  <div className="ib-line">
+                    {scores.overall.toFixed(1)} / 10
+                  </div>
                 </div>
               </div>
             </div>
@@ -112,7 +139,11 @@ export default async function PhonePage({ params }: Props) {
             <div className="budget-icon-wrap">📋</div>
             <span className="budget-hdr-text">Specifications</span>
           </div>
-          <div className="insight-card" style={{ marginTop: 0, boxShadow: "none" }}>
+
+          <div
+            className="insight-card"
+            style={{ marginTop: 0, boxShadow: "none" }}
+          >
             <div className="insight-grid">
               {[
                 ["Processor", phone.processor],
@@ -122,7 +153,6 @@ export default async function PhonePage({ params }: Props) {
                 ["Camera", phone.camera],
                 ["Display", phone.display],
                 ["OS", phone.os],
-                ["Tier", phone.tier],
                 ["Year", String(phone.year)],
               ].map(([k, v]) => (
                 <div key={k} className="insight-block">
@@ -136,6 +166,7 @@ export default async function PhonePage({ params }: Props) {
           </div>
         </div>
       </article>
+
       <style>{`
         @media (max-width: 700px) {
           .phone-detail-top-grid {
