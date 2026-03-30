@@ -6,8 +6,7 @@ import PhoneHeroImage from "@/components/specduel/PhoneHeroImage";
 import { brandSlugFromName } from "@/lib/brand-utils";
 
 import { connectDB } from "@/lib/db";
-import Phone from "../../../../models/Phone ";
-
+import Phone from "../../../models/Phone";
 // ✅ Generate dynamic routes from DB
 export async function generateStaticParams() {
   await connectDB();
