@@ -1,6 +1,5 @@
 import { connectDB } from "@/lib/db";
-import Phone from "../../models/Phone";
-
+import Phone from "@/models/Phone";
 export default async function handler(req, res) {
   await connectDB();
 

@@ -6,7 +6,8 @@ import PhoneHeroImage from "@/components/specduel/PhoneHeroImage";
 import { brandSlugFromName } from "@/lib/brand-utils";
 
 import { connectDB } from "@/lib/db";
-import Phone from "../../../models/Phone";
+import Phone from "@/models/Phone";
+
 // ✅ Generate dynamic routes from DB
 export async function generateStaticParams() {
   await connectDB();
@@ -18,12 +19,18 @@ export async function generateStaticParams() {
   }));
 }
 
-type Props = { params: { slug: string } };
+// ✅ FIX: params must be Promise in Next.js 15
+type Props = {
+  params: Promise<{ slug: string }>;
+};
 
 export default async function PhonePage({ params }: Props) {
   await connectDB();
 
-  const phone: any = await Phone.findById(params.slug);
+  // ✅ FIX: await params
+  const { slug } = await params;
+
+  const phone: any = await Phone.findById(slug);
 
   if (!phone) notFound();
 
